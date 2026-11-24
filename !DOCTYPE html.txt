@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flashcards & Take Quiz — Over-Reliance on Technology</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-dark-card: #111827;
+      --bg-light: #f8fafc;
+      --bg-surface: #ffffff;
+      --text-dark: #0f172a;
+      --text-muted: #475569;
+      --text-light: #f8fafc;
+      --accent: #06b6d4;
+      --accent-2: #6366f1;
+      --success: #10b981;
+      --danger: #ef4444;
+      --border: #e2e8f0;
+      --border-dark: rgba(148, 163, 184, 0.2);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .hero {
+      background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.2), transparent 45%),
+                  radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.22), transparent 50%),
+                  var(--bg-dark);
+      color: var(--text-light);
+      padding: 48px 20px;
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .container {
+      max-width: 1020px;
+      margin: 0 auto;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: #67e8f9;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 4.5vw, 44px);
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      color: #cbd5e1;
+      max-width: 720px;
+      font-size: 15px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 11px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border-dark);
+      background: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #ffffff;
+      border-color: transparent;
+    }
+
+    main {
+      padding: 36px 20px 64px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .toolbar h2 {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-dark);
+      font-weight: 600;
+      font-size: 13.5px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--bg-dark);
+      color: #ffffff;
+      border-color: var(--bg-dark);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #ffffff;
+      border: none;
+    }
+
+    /* Flashcards 3D */
+    .flashcard-stage {
+      max-width: 680px;
+      margin: 0 auto 24px;
+      perspective: 1200px;
+    }
+
+    .flashcard {
+      width: 100%;
+      min-height: 330px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      cursor: pointer;
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: var(--radius);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .card-front {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      border: 1px solid var(--border-dark);
+    }
+
+    .card-back {
+      background: var(--bg-surface);
+      color: var(--text-dark);
+      border: 1px solid var(--border);
+      transform: rotateY(180deg);
+    }
+
+    .pos-tag {
+      font-size: 12px;
+      font-weight: 700;
+      color: #67e8f9;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .word-title {
+      font-size: clamp(28px, 4vw, 38px);
+      font-weight: 800;
+      margin: 12px 0 6px;
+    }
+
+    .ipa {
+      color: #94a3b8;
+      font-size: 16px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .card-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .list-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .list-item h4 {
+      font-size: 17px;
+      margin-bottom: 4px;
+    }
+
+    .list-item .ipa-small {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Quiz */
+    .quiz-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .q-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-2);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .q-text {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .option-btn {
+      text-align: left;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      font-size: 14.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: #ecfeff;
+    }
+
+    .option-btn.correct {
+      background: #ecfdf5;
+      border-color: var(--success);
+      color: #065f46;
+      font-weight: 700;
+    }
+
+    .option-btn.wrong {
+      background: #fef2f2;
+      border-color: var(--danger);
+      color: #991b1b;
+      font-weight: 600;
+    }
+
+    .explanation {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: var(--bg-dark);
+      color: #e2e8f0;
+      font-size: 13.5px;
+      display: none;
+    }
+
+    .explanation.show {
+      display: block;
+    }
+
+    .score-box {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      border-radius: var(--radius);
+      padding: 28px;
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .score-num {
+      font-size: 42px;
+      font-weight: 800;
+      color: #67e8f9;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="badge">Group 2 • Over-Reliance on Technology</div>
+      <h1>Flashcards & Take Quiz</h1>
+      <p>Interactive C1 vocabulary flashcards with English pronunciation (Vocal) and an auto-graded quiz with instant explanations.</p>
+      <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('flashcards', this)">Flashcards & Vocal</button>
+        <button class="tab-btn" onclick="switchTab('quiz', this)">Take Quiz</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- FLASHCARDS SECTION -->
+    <section id="flashcards" class="section active">
+      <div class="toolbar">
+        <h2>C1 Vocabulary & Vocal (<span id="cardCounter">1 / 10</span>)</h2>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn" onclick="flipCurrentCard()">Flip Card</button>
+          <button class="btn" onclick="toggleListView()">All Words List</button>
+        </div>
+      </div>
+
+      <div class="flashcard-stage">
+        <div id="flashcard" class="flashcard" onclick="handleCardClick(event)">
+          <div class="card-face card-front">
+            <div>
+              <div class="pos-tag" id="frontPos"></div>
+              <div class="word-title" id="frontWord"></div>
+              <div class="ipa" id="frontIpa"></div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-accent" onclick="speakText(currentCard().word, event)">🔊 Listen Word</button>
+              <button class="btn" onclick="flipCurrentCard(event)">Show Meaning</button>
+            </div>
+          </div>
+
+          <div class="card-face card-back">
+            <div>
+              <div class="pos-tag" style="color: var(--accent-2);">Meaning & Example</div>
+              <h3 id="backMeaningVi" style="font-size:20px; margin:10px 0 8px;"></h3>
+              <p id="backDefEn" style="color:var(--text-muted); font-size:14.5px; margin-bottom:12px;"></p>
+              <p id="backExample" style="font-style:italic; background:#f1f5f9; padding:12px; border-radius:10px; font-size:14px;"></p>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-primary" onclick="speakText(currentCard().example, event)">🔊 Listen Example</button>
+              <button class="btn" onclick="flipCurrentCard(event)">Back to Word</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-controls">
+        <button class="btn" onclick="prevCard()">← Previous</button>
+        <button class="btn btn-primary" onclick="nextCard()">Next →</button>
+      </div>
+
+      <div id="allWordsList" class="list-grid" style="display:none;"></div>
+    </section>
+
+    <!-- QUIZ SECTION -->
+    <section id="quiz" class="section">
+      <div class="toolbar">
+        <h2>Knowledge Check Quiz</h2>
+        <button class="btn" onclick="resetQuiz()">Restart Quiz</button>
+      </div>
+      <div id="quizContainer"></div>
+      <div id="scoreBox" class="score-box" style="display:none;">
+        <div>Your Quiz Score</div>
+        <div class="score-num" id="scoreValue">0 / 8</div>
+        <p id="scoreFeedback" style="color:#cbd5e1; margin-bottom:16px;"></p>
+        <button class="btn btn-accent" onclick="resetQuiz()">Try Again</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const vocabList = [
+      {
+        word: "Over-reliance",
+        pos: "Noun",
+        ipa: "/ˌəʊ.və.rɪˈlaɪ.əns/",
+        meaningVi: "Sự phụ thuộc quá mức",
+        defEn: "Depending too much on someone or something, often with negative consequences.",
+        example: "An over-reliance on navigation apps can weaken our natural sense of direction."
+      },
+      {
+        word: "Grind to a halt",
+        pos: "Idiom",
+        ipa: "/ɡraɪnd tuː ə hɔːlt/",
+        meaningVi: "Ngừng trệ hoàn toàn, tê liệt",
+        defEn: "To slowly stop moving or functioning completely.",
+        example: "Without internet access, modern banking systems would grind to a halt."
+      },
+      {
+        word: "Spatial awareness",
+        pos: "Noun phrase",
+        ipa: "/ˈspeɪ.ʃəl əˈweə.nəs/",
+        meaningVi: "Nhận thức không gian, khả năng định hướng",
+        defEn: "The ability to be aware of oneself in space and judge distances and directions.",
+        example: "Constantly following GPS routes reduces our spatial awareness in unfamiliar cities."
+      },
+      {
+        word: "Atrophy",
+        pos: "Verb",
+        ipa: "/ˈæt.rə.fi/",
+        meaningVi: "Suy yếu dần, mai một",
+        defEn: "To gradually weaken or decline due to lack of use.",
+        example: "Critical thinking skills may atrophy if students let AI write every essay."
+      },
+      {
+        word: "Systemic risk",
+        pos: "Noun phrase",
+        ipa: "/sɪˈstem.ɪk rɪsk/",
+        meaningVi: "Rủi ro mang tính hệ thống",
+        defEn: "The risk of collapse of an entire system rather than just one isolated part.",
+        example: "Power outages expose the systemic risks of hyper-connected smart cities."
+      },
+      {
+        word: "Domino effect",
+        pos: "Noun phrase",
+        ipa: "/ˈdɒm.ɪ.nəʊ ɪˌfekt/",
+        meaningVi: "Hiệu ứng dây chuyền",
+        defEn: "A situation where one event causes a series of connected events to happen.",
+        example: "A single server crash can trigger a domino effect across public services."
+      },
+      {
+        word: "Hyper-connectivity",
+        pos: "Noun",
+        ipa: "/ˌhaɪ.pə.kɒn.ekˈtɪv.ə.ti/",
+        meaningVi: "Trạng thái siêu kết nối",
+        defEn: "The state of being constantly connected through digital devices and networks.",
+        example: "Hyper-connectivity boosts speed but can increase vulnerability to outages."
+      },
+      {
+        word: "Contingency",
+        pos: "Noun",
+        ipa: "/kənˈtɪn.dʒən.si/",
+        meaningVi: "Phương án dự phòng",
+        defEn: "A backup plan prepared for a possible emergency or failure.",
+        example: "Essential services must keep offline contingencies when networks fail."
+      },
+      {
+        word: "Digital hygiene",
+        pos: "Noun phrase",
+        ipa: "/ˈdɪdʒ.ɪ.təl ˈhaɪ.dʒiːn/",
+        meaningVi: "Thói quen sử dụng công nghệ lành mạnh",
+        defEn: "Healthy daily habits that keep digital life balanced and focused.",
+        example: "Setting screen-free hours before sleep is a key part of digital hygiene."
+      },
+      {
+        word: "Intentional digital citizenship",
+        pos: "Noun phrase",
+        ipa: "/ɪnˈten.ʃən.əl ˈdɪdʒ.ɪ.təl ˈsɪt.ɪ.zən.ʃɪp/",
+        meaningVi: "Quyền công dân số có chủ đích",
+        defEn: "Mindful, ethical, and purposeful use of technology in everyday life.",
+        example: "Schools should promote intentional digital citizenship rather than total bans."
+      }
+    ];
+
+    const quizData = [
+      {
+        q: "1. What does 'atrophy' mean when applied to cognitive or problem-solving skills?",
+        options: [
+          "To expand rapidly through practice",
+          "To gradually weaken due to lack of use",
+          "To become permanently automated",
+          "To replace human judgment"
+        ],
+        correct: 1,
+        explain: "'Atrophy' means to weaken or decline from lack of use—such as losing independent thinking when relying too heavily on AI."
+      },
+      {
+        q: "2. If daily transport and payments 'grind to a halt', what happens?",
+        options: [
+          "They speed up significantly",
+          "They switch to manual mode smoothly",
+          "They slow down and stop functioning completely",
+          "They become cheaper to operate"
+        ],
+        correct: 2,
+        explain: "'Grind to a halt' is an idiom meaning to come to a complete stop."
+      },
+      {
+        q: "3. Which phrase describes a backup plan prepared for a possible system failure?",
+        options: ["Contingency", "Domino effect", "Digital hygiene", "Spatial awareness"],
+        correct: 0,
+        explain: "A 'contingency' (or contingency plan) is a backup measure for emergencies or unexpected disruptions."
+      },
+      {
+        q: "4. Why can over-reliance on GPS affect people in unfamiliar areas?",
+        options: [
+          "It improves long-term memory automatically",
+          "It can weaken spatial awareness and orientation skills",
+          "It eliminates the need for road signs forever",
+          "It prevents network outages"
+        ],
+        correct: 1,
+        explain: "Relying solely on turn-by-turn navigation can reduce spatial awareness when no signal or map is available."
+      },
+      {
+        q: "5. What is a 'domino effect' in a connected city?",
+        options: [
+          "One disruption triggers a chain of connected failures",
+          "Devices automatically update at midnight",
+          "Citizens share identical screen habits",
+          "Energy consumption drops to zero"
+        ],
+        correct: 0,
+        explain: "A 'domino effect' occurs when one problem sets off a sequence of related consequences."
+      },
+      {
+        q: "6. Which habit best reflects 'digital hygiene'?",
+        options: [
+          "Keeping notifications on 24/7 while studying",
+          "Setting screen-free periods and verifying sources",
+          "Copying AI answers without reading them",
+          "Ignoring all offline backup routines"
+        ],
+        correct: 1,
+        explain: "'Digital hygiene' refers to healthy, mindful habits that keep technology use balanced and productive."
+      },
+      {
+        q: "7. What does 'systemic risk' highlight?",
+        options: [
+          "A minor bug on a single phone app",
+          "Vulnerability across an interconnected system as a whole",
+          "A harmless design preference",
+          "Faster wireless charging speed"
+        ],
+        correct: 1,
+        explain: "'Systemic risk' refers to risks affecting an entire interconnected system or infrastructure."
+      },
+      {
+        q: "8. What is the core message of 'intentional digital citizenship'?",
+        options: [
+          "Rejecting all modern technology",
+          "Using technology purposefully and responsibly while keeping human agency",
+          "Letting algorithms make all life decisions",
+          "Avoiding online collaboration completely"
+        ],
+        correct: 1,
+        explain: "Intentional digital citizenship means using digital tools mindfully and ethically while retaining human judgment."
+      }
+    ];
+
+    let currentIndex = 0;
+    let answeredCount = 0;
+    let score = 0;
+
+    function currentCard() {
+      return vocabList[currentIndex];
+    }
+
+    function renderCard() {
+      const item = currentCard();
+      document.getElementById("cardCounter").textContent = `${currentIndex + 1} / ${vocabList.length}`;
+      document.getElementById("frontPos").textContent = item.pos;
+      document.getElementById("frontWord").textContent = item.word;
+      document.getElementById("frontIpa").textContent = item.ipa;
+      document.getElementById("backMeaningVi").textContent = item.meaningVi;
+      document.getElementById("backDefEn").textContent = item.defEn;
+      document.getElementById("backExample").textContent = `"${item.example}"`;
+      document.getElementById("flashcard").classList.remove("flipped");
+    }
+
+    function flipCurrentCard(e) {
+      if (e) e.stopPropagation();
+      document.getElementById("flashcard").classList.toggle("flipped");
+    }
+
+    function handleCardClick(e) {
+      if (e.target.closest("button")) return;
+      flipCurrentCard();
+    }
+
+    function nextCard() {
+      currentIndex = (currentIndex + 1) % vocabList.length;
+      renderCard();
+    }
+
+    function prevCard() {
+      currentIndex = (currentIndex - 1 + vocabList.length) % vocabList.length;
+      renderCard();
+    }
+
+    function speakText(text, e) {
+      if (e) e.stopPropagation();
+      if (!("speechSynthesis" in window)) {
+        alert("Browser does not support speech synthesis.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "en-US";
+      utter.rate = 0.95;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function toggleListView() {
+      const listEl = document.getElementById("allWordsList");
+      const isHidden = listEl.style.display === "none";
+      if (isHidden) {
+        listEl.innerHTML = vocabList.map((v, i) => `
+          <div class="list-item">
+            <div style="font-size:11px; font-weight:700; color:#0284c7;">#${i + 1} • ${v.pos}</div>
+            <h4>${v.word}</h4>
+            <div class="ipa-small">${v.ipa} — <strong>${v.meaningVi}</strong></div>
+            <p style="font-size:13.5px; color:#475569; margin-bottom:10px;">${v.defEn}</p>
+            <button class="btn" style="padding:6px 12px; font-size:12px;" onclick="speakText('${v.word.replace(/'/g, "\\'")}')">🔊 Listen</button>
+          </div>
+        `).join("");
+        listEl.style.display = "grid";
+      } else {
+        listEl.style.display = "none";
+      }
+    }
+
+    function renderQuiz() {
+      const container = document.getElementById("quizContainer");
+      answeredCount = 0;
+      score = 0;
+      document.getElementById("scoreBox").style.display = "none";
+
+      container.innerHTML = quizData.map((item, qIdx) => `
+        <div class="quiz-card" id="qcard-${qIdx}">
+          <div class="q-num">Question ${qIdx + 1} of ${quizData.length}</div>
+          <div class="q-text">${item.q}</div>
+          <div class="options">
+            ${item.options.map((opt, oIdx) => `
+              <button class="option-btn" onclick="selectOption(${qIdx}, ${oIdx}, this)">${opt}</button>
+            `).join("")}
+          </div>
+          <div class="explanation" id="exp-${qIdx}">${item.explain}</div>
+        </div>
+      `).join("");
+    }
+
+    function selectOption(qIdx, oIdx, btn) {
+      const card = document.getElementById(`qcard-${qIdx}`);
+      const buttons = card.querySelectorAll(".option-btn");
+      if (buttons[0].disabled) return;
+
+      buttons.forEach(b => b.disabled = true);
+      const correctIdx = quizData[qIdx].correct;
+
+      if (oIdx === correctIdx) {
+        btn.classList.add("correct");
+        score++;
+      } else {
+        btn.classList.add("wrong");
+        buttons[correctIdx].classList.add("correct");
+      }
+
+      document.getElementById(`exp-${qIdx}`).classList.add("show");
+      answeredCount++;
+
+      if (answeredCount === quizData.length) {
+        showScore();
+      }
+    }
+
+    function showScore() {
+      const box = document.getElementById("scoreBox");
+      const val = document.getElementById("scoreValue");
+      const fb = document.getElementById("scoreFeedback");
+      val.textContent = `${score} / ${quizData.length}`;
+
+      if (score >= 7) {
+        fb.textContent = "Excellent command of C1 vocabulary and digital dependency concepts!";
+      } else if (score >= 5) {
+        fb.textContent = "Good effort! Review the flashcards and explanations to master the remaining terms.";
+      } else {
+        fb.textContent = "Keep practicing with the flashcards and vocal audio, then try the quiz again.";
+      }
+      box.style.display = "block";
+      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function resetQuiz() {
+      renderQuiz();
+    }
+
+    function switchTab(tabName, btn) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(tabName).classList.add("active");
+      btn.classList.add("active");
+    }
+
+    renderCard();
+    renderQuiz();
+  </script>
+</body>
+</html>
